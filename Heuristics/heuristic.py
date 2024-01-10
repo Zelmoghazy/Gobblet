@@ -149,6 +149,212 @@ gb41 = Gobblet("b", 4)
 gb42 = Gobblet("b", 4)
 gb43 = Gobblet("b", 4)
 
+class Board:
+    def __init__(self) -> None:
+        self.board = np.zeros((ROWS, COLS), dtype=Square)
+        self.side_stack = np.zeros((3, 2), dtype=Square)
+
+        self.side_stack[0][0] = Square(Gobblet_Stack([gw11, gw21, gw31, gw41]))
+        self.side_stack[1][0] = Square(Gobblet_Stack([gw12, gw22, gw32, gw42]))
+        self.side_stack[2][0] = Square(Gobblet_Stack([gw13, gw23, gw33, gw43]))
+        
+        self.side_stack[0][1] = Square(Gobblet_Stack([gb11, gb21, gb31, gb41]))
+        self.side_stack[1][1] = Square(Gobblet_Stack([gb12, gb22, gb32, gb42]))
+        self.side_stack[2][1] = Square(Gobblet_Stack([gb13, gb23, gb33, gb43]))
+
+        # self.squares = np.zeros((ROWS, COLS))
+        # self.empty_squares = self.squares
+        # self.marked_squares = 0
+    def Move(Move move):
+        # Move inside the board
+        if(move.flag == 0):
+            self.board[move.to_row][move.to_col].add_piece(self.board[move.from_row][move.from_col].top_piece())
+            self.board[move.from_row][move.from_col].remove_piece()
+        # Move from the side stack
+        if (move.flag == 1):
+            self.board[move.to_row][move.to_col].add_piece(self.side_stack[move.from_row][move.from_col].top_piece())
+            self.side_stack[move.from_row][move.from_col].remove_piece()
+
+    def max_side_stack(self,player):
+        max = 0
+        row = 0
+        for i in range(3):
+            if(self.side_stack[i][player].top_piece().size > max):
+                max = self.side_stack[i][player].top_piece().size
+                row = i
+        return max,row
+
+    # Unmove previous move
+    def Unmove(Move move):
+        # Move inside the board
+        if(move.flag == 0):
+            self.board[move.from_row][move.from_col].add_piece(self.board[move.to_row][move.to_col].top_piece())
+            self.board[move.to_row][move.to_col].remove_piece()
+        # Move from the side stack
+        if (move.flag == 1):
+            self.side_stack[move.from_row][move.from_col].add_piece(self.board[move.to_row][move.to_col].top_piece())
+            self.board[move.to_row][move.to_col].remove_piece()
+
+    def final_state(self):
+        # check rows
+        for row in range(ROWS):
+            if self.squares[row][0] == self.squares[row][1] == self.squares[row][2] == self.squares[row][3] != 0:
+                return self.squares[row][0]
+                # append color
+                # append rows score to a variable
+                # append each gobblet size score variable
+        
+        # check columns
+        for col in range(COLS):
+            if self.squares[0][col] == self.squares[1][col] == self.squares[2][col] == self.squares[3][col] != 0:
+                return self.squares[0][col]
+                # append color
+                # append columns score to a variable
+                # append each gobblet size score variable
+        # check diagonals
+        if self.squares[0][0] == self.squares[1][1] == self.squares[2][2] == self.squares[3][3] != 0:
+            return self.squares[0][0]
+        if self.squares[0][3] == self.squares[1][2] == self.squares[2][1] == self.squares[3][0] != 0:
+            return self.squares[0][3]
+        # check draw
+        if self.is_full():
+            return 3
+        # game is not over
+        # return sum of scores
+        return 0
+
+
+    def mark_square(self, row, col, player):
+        self.squares[row][col] = player
+        self.marked_squares += 1
+
+    def unmark_square(self, row, col):
+        self.squares[row][col] = 0
+        self.marked_squares -= 1
+
+    def get_empty_squares(self):
+        # Loop in Side stack for an empty square
+        # return empty_squares and all player pieces on board and opponent pieces on board
+        # first pick the smallest player piece and loop on opponent pieces on board
+        # if the opponent piece is smaller than the player piece then mark it as a possible move
+        # def get_available_squares(self,player,)
+
+        # Loop in Board for an empty square or a square with a smaller piece
+        empty_squares = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.empty_square(row, col):
+                    empty_squares.append((row, col))
+        return empty_squares
+
+    def get_score(self,move,player):
+        size = move.score
+        score = 0
+        # check rows
+        string = ''
+        for row in range(ROWS):
+            string.clear()
+            for col in range(COLS):
+                if(move.to_row == row and move.to_col == col):
+                    if(player == 1):
+                        string.append('w')
+                        score += size
+                    else:
+                        string.append('b')
+                        score -= size
+                string.append(self.squares[row][col].color)
+                if(self.squares[row][col].color == player):
+                    score += self.squares[row][col].size
+                else:
+                    score -= self.squares[row][col].size
+            score += hashmap[string]
+        # check columns
+        for col in range(COLS):
+            string.clear()
+            for row in range(ROWS):
+                if(move.to_row == row and move.to_col == col):
+                    if(player == 1):
+                        string.append('w')
+                        score += size
+                    else:
+                        string.append('b')
+                        score -= size
+                string.append(self.squares[row][col].color)
+                if(self.squares[row][col].color == player):
+                    score += self.squares[row][col].size
+                else:
+                    score -= self.squares[row][col].size
+            score += hashmap[string]
+        # check diagonals
+        string.clear()
+        for i in range(ROWS):
+            if(move.to_row == row and move.to_col == row):
+                if(player == 1):
+                    string.append('w')
+                    score += size
+                else:
+                    string.append('b')
+                    score -= size
+            string.append(self.squares[i][i].color)
+            if(self.squares[i][i].color == player):
+                score += self.squares[i][i].size
+            else:
+                score -= self.squares[i][i].size
+        score += hashmap[string]
+        string.clear()
+
+        for i in range(ROWS):
+            if(move.to_row == row and move.to_col == ROWS-row):
+                if(player == 1):
+                    string.append('w')
+                    score += size
+                else:
+                    string.append('b')
+                    score -= size
+            string.append(self.squares[i][ROWS-i].color)
+            if(self.squares[i][ROWS-i].color == player):
+                score += self.squares[i][ROWS-i].size
+            else:
+                score -= self.squares[i][ROWS-i].size
+        score += hashmap[string]
+        return score
+    
+        # append color
+        # append rows score to a variable
+        # append each gobblet size score variable
+
+    def getAvailableMoves(self,player):
+        # Loop in Side stack for an empty square
+        # return empty_squares and all player pieces on board and opponent pieces on board
+        # first pick the smallest player piece and loop on opponent pieces on board
+        # if the opponent piece is smaller than the player piece then mark it as a possible move
+        # def get_available_squares(self,player,)
+
+        # Loop in Board for an empty square or a square with a smaller piece
+
+        # First check for empty squares on board 
+        moves = []
+
+        max,side_row =  self.max_side_stack(player)
+  
+        for row in range(ROWS):      
+            for col in range(COLS):
+                if self.board[row][col].is_empty():
+                    move = Move(side_row,player,row,col,max,1)
+                    get_score(move,player)
+                    moves.append()
+        # First check if side stack is not empty
+        # if not empty then check for empty squares in
+    def empty_square(self, row, col):
+        return self.squares[row][col] == 0
+
+    def is_full(self):
+        return self.marked_squares == ROWS * COLS   
+    
+    def is_empty(self):
+        return self.marked_squares == 0 
+
+
 class AI:
     def __init__(self, level=1, player=2) -> None:
         self.level = level
@@ -275,3 +481,81 @@ class AI:
             eval,move = self.minimax_alpha_beta(board,False,-100,100,9)
             print(counter)
         return move
+
+class Game:
+    def __init__(self) -> None:
+        self.board = Board()
+        self.AI = AI()
+        self.player = 1
+        self.game_mode = 'AI'
+        self.running = True
+        self.show_lines()
+
+    def show_lines(self):
+        for i in range(ROWS):
+            pygame.draw.line(screen, LINE_COLOR, (0, i * SQUARE_SIZE), (WIDTH, i * SQUARE_SIZE),LINE_WIDTH)
+        for j in range(COLS):
+            pygame.draw.line(screen, LINE_COLOR, (j * SQUARE_SIZE, 0), (j * SQUARE_SIZE, HEIGHT),LINE_WIDTH)
+
+    def next_turn(self):
+        self.player = (self.player % 2) + 1
+
+
+    def make_move(self, row, col):
+        self.board.mark_square(row, col, self.player)
+        self.draw_fig(row, col)
+        self.next_turn()
+    
+    def draw_fig(self, row, col):
+        centre = (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2)
+        if self.player == 1:
+            pygame.draw.circle(screen, CIRCLE_COLOR,centre, CIRCLE_RADIUS, CIRCLE_WIDTH)
+        elif self.player == 2:
+            start_desc = (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE - SQUARE_SIZE//4)
+            end_desc = (col * SQUARE_SIZE + SQUARE_SIZE - SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4)
+
+            start_asc = (col * SQUARE_SIZE + SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE//4)
+            end_asc = (col * SQUARE_SIZE + SQUARE_SIZE - SQUARE_SIZE//4, row * SQUARE_SIZE + SQUARE_SIZE - SQUARE_SIZE//4)
+
+            pygame.draw.line(screen, CROSS_COLOR, start_desc, end_desc, CROSS_WIDTH)
+            pygame.draw.line(screen, CROSS_COLOR, start_asc, end_asc, CROSS_WIDTH)
+
+def main():
+    game = Game()
+    board = game.board
+    ai = game.AI
+
+    while game.running == True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                col = pos[0] // SQUARE_SIZE
+                row = pos[1] // SQUARE_SIZE
+                if(board.empty_square(row, col) == True):
+                    game.make_move(row, col)
+
+                print(game.board.squares)
+                print(game.player)
+        
+        if game.game_mode == 'AI' and game.player == ai.player:
+            pygame.display.update()
+            row,col = ai.evaluate(board)
+            game.make_move(row, col)
+
+
+        if game.board.final_state() != 0:
+            if game.board.final_state() == 3:
+                print("Draw")
+            elif game.board.final_state() == 1:
+                print("Player 1 wins")      
+            elif game.board.final_state() == 2:
+                print("Player 2 wins")
+            game.running = False
+        pygame.display.update()
+    
+
+if __name__ == "__main__":
+    main()
