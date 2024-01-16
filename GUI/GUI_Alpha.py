@@ -2,6 +2,23 @@ import pygame
 import sys
 import math
 from collections import defaultdict
+# from engine.gobblet_engine.gobblet_engine import GobbletEngine
+# from engine.gobblet_engine.gobblet_ai_bot import GobbletAIBot
+# from engine.gobblet_engine.utils.action import Action
+
+# engine = GobbletEngine(whose_turn=1)
+# ai = GobbletAIBot()
+
+# action = ai.getNextAction(engine.getGameState())
+# engine.step(action.getBoardType(), 
+#             action.getX1(), 
+#             action.getY1, 
+#             action.getY1, 0)
+
+
+# engine.getGameState()
+
+# engine.step(0, 0, 0, 0, 0)
 
 pygame.init()
 
@@ -23,11 +40,11 @@ LINE_WIDTH = 10
 #Create Screen
 screen = pygame.display.set_mode((LEFT_MARGIN+WIDTH+RIGHT_MARGIN+CONTROL_PANEL,HEIGHT))
 pygame.display.set_caption("Gobblet")
-icon = pygame.image.load("Images\\Icon.png")
+icon = pygame.image.load("GUI\Images\Icon.png")
 pygame.display.set_icon(icon)
 
 #Add Background Image
-Background_Img = pygame.image.load("Images//Board.png")
+Background_Img = pygame.image.load("GUI\Images\Board.png")
 Background_Img = pygame.transform.scale(Background_Img, (WIDTH + LEFT_MARGIN*2 + CONTROL_PANEL, HEIGHT))
 
 # Center to snap pieces
