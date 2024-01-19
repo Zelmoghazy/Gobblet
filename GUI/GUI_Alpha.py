@@ -40,11 +40,11 @@ LINE_WIDTH = 10
 #Create Screen
 screen = pygame.display.set_mode((LEFT_MARGIN+WIDTH+RIGHT_MARGIN+CONTROL_PANEL,HEIGHT))
 pygame.display.set_caption("Gobblet")
-icon = pygame.image.load("GUI\Images\Icon.png")
+icon = pygame.image.load("Images\\Icon.png")
 pygame.display.set_icon(icon)
 
 #Add Background Image
-Background_Img = pygame.image.load("GUI\Images\Board.png")
+Background_Img = pygame.image.load("Images\\Board.png")
 Background_Img = pygame.transform.scale(Background_Img, (WIDTH + LEFT_MARGIN*2 + CONTROL_PANEL, HEIGHT))
 
 # Center to snap pieces
@@ -238,11 +238,11 @@ def main():
                             circle_map[(active_circle_old_x,active_circle_old_y)].pop()
 
                         illegal = False
-                        # Switch Active Player
-                        if active_player == 'white':
-                            active_player = 'black'
-                        else:
-                            active_player = 'white'
+                    # Switch Active Player
+                    if active_player == 'white':
+                        active_player = 'black'
+                    else:
+                        active_player = 'white'
 
                     active_circle = None
         
