@@ -54,6 +54,9 @@ side_centers = []
 circles = []
 circle_map = defaultdict(list)
 
+#Moves
+Moves =[]
+
 active_circle = None
 active_circle_old_x = None
 active_circle_old_y = None
@@ -82,6 +85,7 @@ class Circle:
         self.color = color
         self.rect = pygame.Rect(center[0] - radius, center[1] - radius, 2 * radius, 2 * radius)
         self.center = center
+        self.radius = radius 
 
     def draw(self, screen):
         pygame.draw.circle(screen,self.color,self.rect.center,self.rect.width)
@@ -90,6 +94,16 @@ class Circle:
         if isinstance(other, Circle):
             return self.num == other.num
         return False
+
+#Class for Move
+class Move:
+    def __init__(self, from_row, from_col, to_row, to_col,score,flag):
+        self.from_row = from_row
+        self.from_col = from_col
+        self.to_row = to_row
+        self.to_col = to_col
+        self.score = score
+        self.flag = flag    # Either 0 for board or 1 for side stack (initialized with piece move and rewritten)
 
 #Class for Game Initialization========================================== 
 class Game:
@@ -269,7 +283,37 @@ def main():
 
                         illegal = False
                         #print("in rule")
-                    
+
+                        if old_center in side_centers: 
+                            flag = 1 
+                            move = Move( active_circle_old_y//CELL_SIZE if active_player == 'black' else (active_circle_old_y-CELL_SIZE)//CELL_SIZE,
+                                         0 if active_player == 'black' else 1,
+                                    (nearest_center[1]- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[0]-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    dragged_rect.width//20,
+                                    flag)  
+                        else:
+                            flag = 0
+                            move = Move((active_circle_old_y- CELL_SIZE//2) // CELL_SIZE ,
+                                    (active_circle_old_x-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[1]- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[0]-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    dragged_rect.width//20,
+                                    flag)  
+
+                        
+                        
+                        
+
+                        #print(
+                        #   move.from_row,
+                        #    move.from_col,
+                        #    move.to_row,
+                        #    move.to_col,
+                        #    move.score,
+                        #    move.flag
+                        #)
+
                     game.rule = []
                     rule = False
                     # Switch Active Player
