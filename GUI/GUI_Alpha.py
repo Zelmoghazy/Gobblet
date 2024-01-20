@@ -49,7 +49,7 @@ Background_Img = pygame.transform.scale(Background_Img, (WIDTH + LEFT_MARGIN*2 +
 
 # Center to snap pieces
 centers = []
-
+side_centers = []
 # Pieces
 circles = []
 circle_map = defaultdict(list)
@@ -81,6 +81,7 @@ class Circle:
         self.num = num    #id
         self.color = color
         self.rect = pygame.Rect(center[0] - radius, center[1] - radius, 2 * radius, 2 * radius)
+        self.center = center
 
     def draw(self, screen):
         pygame.draw.circle(screen,self.color,self.rect.center,self.rect.width)
@@ -108,11 +109,13 @@ class Game:
 
         for i in range(GRID_SIZE-1):
             for j in range(GRID_SIZE):
-                white_circle = Circle("white", (GRID_SIZE * CELL_SIZE + LEFT_MARGIN + CELL_SIZE // 2, i * CELL_SIZE + CELL_SIZE), (j + 1) * 10,num)
+                white_circle = Circle("white", (GRID_SIZE * CELL_SIZE + LEFT_MARGIN + CELL_SIZE // 2, i * CELL_SIZE + 1.5*CELL_SIZE), (j + 1) * 10,num)
                 circles.append(white_circle)
+                side_centers.append(white_circle.center)
                 num += 1
-                black_circle = Circle("black", (RIGHT_MARGIN // 2, i * CELL_SIZE + CELL_SIZE), (j + 1) * 10,num)
+                black_circle = Circle("black", (RIGHT_MARGIN // 2, i * CELL_SIZE + 0.5*CELL_SIZE), (j + 1) * 10,num)
                 circles.append(black_circle)
+                side_centers.append(black_circle.center)
                 num += 1
         circles.sort(key=lambda circle: circle.rect.width)
         for idx, circle in enumerate(circles):
@@ -120,6 +123,7 @@ class Game:
             idx+=1
         # Winning combinations
         self.winning_combinations = []
+        self.rule = []
         for i in range(GRID_SIZE):
             # Horizontal
             self.winning_combinations.append([(i * CELL_SIZE + LEFT_MARGIN + CELL_SIZE // 2, j * CELL_SIZE + CELL_SIZE // 2) for j in range(GRID_SIZE)])
@@ -134,6 +138,7 @@ def main():
     game = Game() 
     illegal = False
     game_over = False
+    rule = False # Gobble up one of the 3 pieces in a row to prevent the opponent to win 
     while True:
         global active_circle
         global active_player
@@ -170,16 +175,28 @@ def main():
         if not illegal:
             for combo in game.winning_combinations:
                 color_count = {'white': 0, 'black': 0}
+                consecutive = []
                 for center in combo:
                     if circle_map[center]:
                         color_count[circle_map[center][-1].color] += 1
+                        consecutive.append(circle_map[center][-1].color)
+                    else :
+                        consecutive.append('')
                 if color_count['white'] == GRID_SIZE:
                     screen.blit(white_win, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 200))
                     game_over = True
+                elif color_count['white'] == GRID_SIZE-1 and consecutive[1] == 'white' and consecutive[2] == 'white':
+                    if combo not in game.rule:
+                        game.rule.append(combo)
+                        #print("in combo")
                     
                 elif color_count['black'] == GRID_SIZE:
                     screen.blit(black_win, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 200))
                     game_over = True
+                elif color_count['black'] == GRID_SIZE-1 and consecutive[1] == 'black' and consecutive[2] == 'black':
+                     if combo not in game.rule:
+                        game.rule.append(combo)
+                        #print("in combo")
                     
 
         # Events
@@ -221,11 +238,24 @@ def main():
                     nearest_center = min(centers, key=lambda center: math.dist((dragged_rect.centerx, dragged_rect.centery), (center[0],center[1])))
                     # Compare dragged and placed pieces
                     overlapping_circle = next((circle for circle in circles if circle.rect.centerx == nearest_center[0] and circle.rect.centery == nearest_center[1] and circle.rect.width >= dragged_rect.width), None)
+                    
+                    old_center = (active_circle_old_x, active_circle_old_y)
+
+                    for com in game.rule:
+                        for center in com:
+                            if (nearest_center[0],nearest_center[1]) == center:
+                                rule = True
 
                     if overlapping_circle is not None:
                         # Revert Old Positions
                         dragged_rect.centerx = active_circle_old_x
                         dragged_rect.centery = active_circle_old_y
+                        
+                    elif old_center in side_centers and circle_map[(nearest_center[0],nearest_center[1])] != [] and not rule:
+                        # Revert Old Positions
+                        dragged_rect.centerx = active_circle_old_x
+                        dragged_rect.centery = active_circle_old_y
+                        #print("not in rule")
                     else:                        
                         # Snap the dragged rectangle to the nearest center
                         dragged_rect.centerx = nearest_center[0]
@@ -238,6 +268,10 @@ def main():
                             circle_map[(active_circle_old_x,active_circle_old_y)].pop()
 
                         illegal = False
+                        #print("in rule")
+                    
+                    game.rule = []
+                    rule = False
                     # Switch Active Player
                     if active_player == 'white':
                         active_player = 'black'
