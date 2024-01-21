@@ -302,9 +302,6 @@ def main():
                                     flag)  
 
                         
-                        
-                        
-
                         #print(
                         #   move.from_row,
                         #    move.from_col,
@@ -313,14 +310,16 @@ def main():
                         #    move.score,
                         #    move.flag
                         #)
+                            
+                        # Switch Active Player
+                        if active_player == 'white':
+                            active_player = 'black'
+                        else:
+                            active_player = 'white'
 
                     game.rule = []
                     rule = False
-                    # Switch Active Player
-                    if active_player == 'white':
-                        active_player = 'black'
-                    else:
-                        active_player = 'white'
+                    
 
                     active_circle = None
         
