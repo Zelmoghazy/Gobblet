@@ -174,3 +174,210 @@ class Button():
 
 def get_font_title(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("Fonts/ARCADE.TTF", size)
+
+def options():
+    global AI_DIFFICULTY
+    global AI_DIFFICULTY_2
+    global h_v_h
+    global h_v_ai
+    global ai_v_ai
+    while True:
+        screen.fill("black")
+        if AI_DIFFICULTY == 0:
+            if h_v_h:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (250, 270))
+                screen.blit(checked, (1300, 270))
+            elif h_v_ai:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (250, 270))
+                screen.blit(checked, (1320, 380))
+            else:
+                if AI_DIFFICULTY_2 == 0:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 270))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 270))
+                elif AI_DIFFICULTY_2 == 1:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 270))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (800, 380))
+                elif AI_DIFFICULTY_2 == 2:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 270))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 490))                     
+
+                
+        elif AI_DIFFICULTY == 1:
+            if h_v_h:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (320, 380))
+                screen.blit(checked, (1300, 270))
+            elif h_v_ai:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (320, 380))
+                screen.blit(checked, (1320, 380))
+            else:
+                if AI_DIFFICULTY_2 == 0:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (320, 380))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 270))
+                elif AI_DIFFICULTY_2 == 1:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (320, 380))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (800, 380))
+                elif AI_DIFFICULTY_2 == 2:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (320, 380))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 490))   
+
+        elif AI_DIFFICULTY == 2:
+            if h_v_h:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (250, 490))
+                screen.blit(checked, (1300, 270))
+            elif h_v_ai:
+                screen.blit(Options_BG, (0, 0))
+                screen.blit(checked, (250, 490))
+                screen.blit(checked, (1320, 380))
+            else:
+                if AI_DIFFICULTY_2 == 0:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 490))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 270))
+                elif AI_DIFFICULTY_2 == 1:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 490))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (800, 380))
+                elif AI_DIFFICULTY_2 == 2:
+                    screen.blit(Options_BG, (0, 0))
+                    screen.blit(checked, (250, 490))
+                    screen.blit(checked, (1340, 490))
+                    screen.blit(checked, (730, 490))      
+        
+
+        
+        Difficulty_txt = get_font_title(70).render("-Difficulty A1", True, "white")
+        screen.blit(Difficulty_txt,(50, 170))
+        Difficulty_txt = get_font_title(70).render("-Difficulty A2", True, "white")
+        screen.blit(Difficulty_txt,(500, 170))
+        Mode_txt = get_font_title(70).render("-Mode", True, "white")
+        screen.blit(Mode_txt,(1000, 170))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        MENU_TEXT = get_font_title(200).render("Options", True, "white")
+        MENU_RECT = MENU_TEXT.get_rect(center=(340, 100))
+
+        EASY_BUTTON_1 = Button(image=pygame.image.load("Images/Rect.png"), pos=(170, 300), 
+                            text_input="EASY", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        HARD_BUTTON_1 = Button(image=pygame.image.load("Images/Rect.png"), pos=(170, 520), 
+                            text_input="HARD", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        MED_BUTTON_1 = Button(image=pygame.image.load("Images/Rect.png"), pos=(200, 410), 
+                            text_input="MEDIUM", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        EASY_BUTTON_2 = Button(image=pygame.image.load("Images/Rect.png"), pos=(640, 300), 
+                            text_input="EASY", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        HARD_BUTTON_2 = Button(image=pygame.image.load("Images/Rect.png"), pos=(640, 520), 
+                            text_input="HARD", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        MED_BUTTON_2 = Button(image=pygame.image.load("Images/Rect.png"), pos=(670, 410), 
+                            text_input="MEDIUM", font=get_font_title(70), base_color="yellow", hovering_color="green")                 
+        HVH_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(1150, 300), 
+                            text_input="H vs H", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        HVAI_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(1170, 410), 
+                            text_input="H vs AI", font=get_font_title(70), base_color="yellow", hovering_color="green")   
+        AIVAI_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(1190, 520), 
+                            text_input="AI vs AI", font=get_font_title(70), base_color="yellow", hovering_color="green") 
+        BACK_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(200, 650), 
+                            text_input="BACK", font=get_font_title(70), base_color="yellow", hovering_color="green")
+
+        screen.blit(MENU_TEXT, MENU_RECT)
+
+        for button in [EASY_BUTTON_1, HARD_BUTTON_1, BACK_BUTTON, HVH_BUTTON, HVAI_BUTTON, AIVAI_BUTTON, MED_BUTTON_1,EASY_BUTTON_2, HARD_BUTTON_2, MED_BUTTON_2]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if EASY_BUTTON_1.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY = 0
+                if HARD_BUTTON_1.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY = 2
+                if MED_BUTTON_1.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY = 1
+                if EASY_BUTTON_2.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY_2 = 0
+                if HARD_BUTTON_2.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY_2 = 2
+                if MED_BUTTON_2.checkForInput(MENU_MOUSE_POS):
+                    AI_DIFFICULTY_2 = 1
+                if HVH_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    h_v_h = True
+                    h_v_ai = False
+                    ai_v_ai = False
+                if HVAI_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    h_v_h = False
+                    h_v_ai = True
+                    ai_v_ai = False
+                if AIVAI_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    h_v_h = False
+                    h_v_ai = False
+                    ai_v_ai = True
+                if BACK_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    Main_Menu()
+
+        pygame.display.update()    
+
+def Main_Menu():
+    while True:
+        screen.blit(Menu_BG, (0, 0))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+
+        MENU_TEXT = get_font_title(200).render("Gobblet!", True, "white")
+        MENU_RECT = MENU_TEXT.get_rect(center=(400, 100))
+
+        PLAY_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(250, 250), 
+                            text_input="PLAY", font=get_font_title(100), base_color="yellow", hovering_color="green")
+        OPTIONS_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(320, 400), 
+                            text_input="OPTIONS", font=get_font_title(100), base_color="yellow", hovering_color="green")
+        QUIT_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(250, 550), 
+                            text_input="QUIT", font=get_font_title(100), base_color="yellow", hovering_color="green")
+
+        screen.blit(MENU_TEXT, MENU_RECT)
+
+        for button in [PLAY_BUTTON, OPTIONS_BUTTON, QUIT_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)
+        
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if PLAY_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    if h_v_h:
+                        H_vs_H()
+                    elif h_v_ai:
+                        H_vs_AI()
+                    else:
+                        AI_vs_AI()
+                if OPTIONS_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    options()
+                if QUIT_BUTTON.checkForInput(MENU_MOUSE_POS):
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.update()
+
+ 
+Main_Menu()
