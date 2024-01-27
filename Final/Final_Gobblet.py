@@ -9,6 +9,96 @@ import math
 import numpy as np
 from timeout_decorator import timeout
 
+'''
+Pattern based heuristic calculation
+'''
+Heuristic = {
+    'wwww': 10000000,
+    'xwww': 30000,
+    'wxww': 30000,
+    'wwxw': 30000,
+    'wwwx': 30000,
+    'xxww': 2000,
+    'xwxw': 2000,
+    'xwwx': 2000,
+    'wxxw': 2000,
+    'wxwx': 2000,
+    'wwxx': 2000,
+    'wwwb': 2000,
+    'wwbw': 2000,
+    'wbww': 2000,
+    'bwww': 2000,
+    'xxxw': 1000,
+    'xxwx': 1000,
+    'xwxx': 1000,
+    'xwwb': 1000,
+    'xwbw': 1000,
+    'xbww': 1000,
+    'wxxx': 1000,
+    'wxwb': 1000,
+    'wxbw': 1000,
+    'wwxb': 1000,
+    'wwbx': 1000,
+    'wbxw': 1000,
+    'wbwx': 1000,
+    'bxww': 1000,
+    'bwxw': 1000,
+    'bwwx': 1000,
+    'xxxx': 0,
+    'xxwb': 0,
+    'xxbw': 0,
+    'xwxb': 0,
+    'xwbx': 0,
+    'xbxw': 0,
+    'xbwx': 0,
+    'wxxb': 0,
+    'wxbx': 0,
+    'wwbb': 0,
+    'wbxx': 0,
+    'wbwb': 0,
+    'wbbw': 0,
+    'bxxw': 0,
+    'bxxw': 0,
+    'bxwx': 0,
+    'bwxx': 0,
+    'bwwb': 0,
+    'bwbw': 0,
+    'bbww': 0,
+    'xxxb': -1000,
+    'xxbx': -1000,
+    'xwbb': -1000,
+    'xbxx': -1000,
+    'xbwb': -1000,
+    'xbbw': -1000,
+    'wxbb': -1000,
+    'wbxb': -1000,
+    'wbbx': -1000,
+    'bxxx': -1000,
+    'bxwb': -1000,
+    'bxbw': -1000,
+    'bwxb': -1000,
+    'bwbx': -1000,
+    'bbxw': -1000,
+    'bbwx': -1000,
+    'xxbb': -2000,
+    'xbxb': -2000,
+    'xbbx': -2000,
+    'wbbb': -2000,
+    'bxxb': -2000,
+    'bxbx': -2000,
+    'bwbb': -2000,
+    'bbxx': -2000,
+    'bbwb': -2000,
+    'bbbw': -2000,
+    'xbbb': -30000,
+    'bxbb': -30000,
+    'bbxb': -30000,
+    'bbbx': -30000,
+    'bbbb': -10000000
+}
+
+
+
 pygame.init()
 
 def make_GUI_Move(move:Move):
@@ -133,6 +223,126 @@ class Board:
             self.board[move.to_row][move.to_col].remove_piece()
 
 
+    # Iterate over each row, column and diagonal to get the score of the board if a move is applied
+    # used in move ordering and as an evaluation function at maximum depth
+    def get_score(self,move,player):
+        size = move.score # size of next move piece
+        score = 0
+
+        string = ''
+
+        # check rows
+        # Remember to check for empty squares
+        for row in range(ROWS):
+            string = ""
+            for col in range(COLS):
+                if(move.to_row == row and move.to_col == col):
+                    if(player == 1):
+                        string += ('w')
+                        score += size_score[size] # maximizer
+                    else:
+                        string += ('b')
+                        score -= size_score[size] # minimizer
+                else:
+                    top = None
+                    # flag = 0 -> move inside board
+                    # Simulate the move on the board
+                    if(move.flag == 0 and move.from_row == row and move.from_col == col):
+                        top = self.board[row][col].get_top() # save top piece
+                        self.board[row][col].remove_piece()  # pop top piece
+                    # w : white piece
+                    # b : black piece
+                    # x : empty square    
+                    string += (self.board[row][col].get_top_color())
+                    if(self.board[row][col].get_top_color() == player_color[player]):
+                        score += size_score[self.board[row][col].get_top_size()]
+                    else:
+                        score -= size_score[self.board[row][col].get_top_size()]
+                    # return the piece to the board
+                    if(top != None):
+                        self.board[row][col].add_piece(top)
+            score += Heuristic[string]
+
+        # check columns
+        for col in range(COLS):
+            string = ""
+            for row in range(ROWS):
+                if(move.to_row == row and move.to_col == col):
+                    if(player == 1):
+                        string += ('w')
+                        score += size_score[size]
+                    else:
+                        string += ('b')
+                        score -= size_score[size]
+                else:
+                    top = None
+                    # flag = 0 -> move inside board
+                    if(move.flag == 0 and move.from_row == row and move.from_col == col):
+                        top = self.board[row][col].get_top()
+                        self.board[row][col].remove_piece()
+                    string += (self.board[row][col].get_top_color())
+                    if(self.board[row][col].get_top_color() == player):
+                        score += size_score[self.board[row][col].get_top_size()]
+                    else:
+                        score -= size_score[self.board[row][col].get_top_size()]
+                        
+                    if(top != None):
+                        self.board[row][col].add_piece(top)
+            score += Heuristic[string]
+
+        string = ""
+
+        # check diagonals
+        for i in range(ROWS):
+            if(move.to_row == i and move.to_col == i):
+                if(player == 1):
+                    string += ('w')
+                    score += size_score[size]
+                else:
+                    string += ('b')
+                    score -= size_score[size]
+            else:
+                top = None
+                # flag = 0 -> move inside board
+                if(move.flag == 0 and move.from_row == i and move.from_col == i):
+                    top = self.board[i][i].get_top()
+                    self.board[i][i].remove_piece()
+                string += (self.board[i][i].get_top_color())
+                if(self.board[i][i].get_top_color() == player_color[player]):
+                    score += size_score[self.board[i][i].get_top_size()]
+                else:
+                    score -= size_score[self.board[i][i].get_top_size()]
+                if(top != None):
+                    self.board[i][i].add_piece(top)
+        score += Heuristic[string]
+
+        string = ""
+
+        for i in range(ROWS):
+            if(move.to_row == i and move.to_col == ROWS-i-1):
+                if(player == 1):
+                    string += ('w')
+                    score += size_score[size]
+                else:
+                    string += ('b')
+                    score -= size_score[size]
+            else:
+                top = None
+                # flag = 0 -> move inside board
+                if(move.flag == 0 and move.from_row == i and move.from_col == ROWS-i-1):
+                    top = self.board[i][ROWS-i-1].get_top()
+                    self.board[i][ROWS-i-1].remove_piece()
+                string += (self.board[i][ROWS-i-1].get_top_color())
+                if(self.board[i][ROWS-i-1].get_top_color() == player_color[player]):
+                    score += size_score[self.board[i][ROWS-i-1].get_top_size()]
+                else:
+                    score -= size_score[self.board[i][ROWS-i-1].get_top_size()]
+                if(top != None):
+                    self.board[i][ROWS-i-1].add_piece(top)
+        score += Heuristic[string]
+
+        return score
+    
 
     '''
 From Gobblet rules : If you put a new gobblet in play, you must place it on an empty square.
