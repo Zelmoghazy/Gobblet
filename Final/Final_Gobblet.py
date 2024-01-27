@@ -98,7 +98,6 @@ Heuristic = {
 }
 
 
-
 pygame.init()
 
 def make_GUI_Move(move:Move):
@@ -122,6 +121,51 @@ def make_GUI_Move(move:Move):
             circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
             circles[id].rect.centerx = nearest_centerx
             circles[id].rect.centery = nearest_centery
+
+
+'''
+Each gobblet on board is completely represented by its color and size
+'''
+class Gobblet:
+    def __init__(self, color, size):
+        self.color = color
+        self.size = size
+    def __str__(self) -> str:
+        return self.color + " " + self.size
+
+gw11 = Gobblet("w", 1)
+gw12 = Gobblet("w", 1)
+gw13 = Gobblet("w", 1)
+
+gw21 = Gobblet("w", 2)
+gw22 = Gobblet("w", 2)
+gw23 = Gobblet("w", 2)
+
+gw31 = Gobblet("w", 3)
+gw32 = Gobblet("w", 3)
+gw33 = Gobblet("w", 3)
+
+gw41 = Gobblet("w", 4)
+gw42 = Gobblet("w", 4)
+gw43 = Gobblet("w", 4)
+
+gb11 = Gobblet("b", 1)
+gb12 = Gobblet("b", 1)
+gb13 = Gobblet("b", 1)
+
+gb21 = Gobblet("b", 2)
+gb22 = Gobblet("b", 2)
+gb23 = Gobblet("b", 2)
+
+gb31 = Gobblet("b", 3)
+gb32 = Gobblet("b", 3)
+gb33 = Gobblet("b", 3)
+
+gb41 = Gobblet("b", 4)  
+gb42 = Gobblet("b", 4)
+gb43 = Gobblet("b", 4)
+
+
 
 
 #Class for Move
@@ -383,7 +427,149 @@ def get_three_in_a_row(self,player,row,col):
         if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color()):
             if(self.board[2][1] == self.board[3][0].get_top_color()):
                 return True
-                
+
+
+
+# Returns all possible moves of player from a certain state
+# 1 - From the sidestack to an empty square on the board
+# 2 - From board to either empty square on board or a smaller piece
+# 3 - From sidestack to board, only if 3 of opponents pieces are in row
+def getAvailableMoves(self,player):
+    moves = []
+
+    # get maximum piece in side stack and its size
+    max,side_row = self.max_side_stack(player)
+
+    # get all player pieces on board
+    player_pieces_on_board = self.player_pieces_on_board(player) 
+
+    for row in range(ROWS):      
+        for col in range(COLS):
+            if self.board[row][col].is_empty():
+                # Make move from side stack to an empty square 
+                move = Move(side_row,player,row,col,max,1)
+                move.score = self.get_score(move,player)
+                moves.append(move)
+                # Make move from board to an empty square
+                for piece in player_pieces_on_board:
+                    move = Move(piece[0],piece[1],row,col,piece[2],0)
+                    move.score = self.get_score(move,player)
+                    moves.append(move)
+            # Make move to a smaller piece
+            # Optimization: check only for opponent pieces on board
+            elif self.board[row][col].get_top_color() != player_color[player]:
+                # only if its row or column or diagonal contains three pieces from opponent
+                # its legal to gobble from external stack to board
+                # otherwise its only allowed to be place on an empty square
+                if(self.board[row][col].get_top_size() < max and self.get_three_in_a_row(player,row,col)):
+                    move = Move(side_row,player,row,col,max,1)
+                    move.score = self.get_score(move,player)
+                    moves.append(move)
+                for piece in player_pieces_on_board:
+                    if(self.board[row][col].get_top_size() < piece[2]):
+                        move = Move(piece[0],piece[1],row,col,piece[2],0)
+                        move.score = self.get_score(move,player)
+                        moves.append(move)
+    return moves
+
+'''
+Each square on board is represented as a stack
+each stack is initialized with a dummy gobblet of color 'x' 
+and size = 0, this is required for easy score calculation later
+'''
+class Gobblet_Stack:
+    def __init__(self, Gobblet_Stack) -> None:
+        self.stack = list(Gobblet_Stack)
+    def __str__(self) -> str:
+        str=""
+        for i in range(len(self.stack)):
+            str += str(self.stack[i]) + " "
+        return str
+    def add_piece(self, piece):
+        self.stack.append(piece)
+    def remove_piece(self):
+        self.stack.pop()
+    def is_empty(self):
+        return self.stack[-1].color == "x"
+    def is_full(self):
+        return len(self.stack) == 5
+    def get_top(self):
+        return self.stack[-1]
+    def get_stack_size(self):
+        return len(self.stack)
+    def get_top_size(self):
+        return self.stack[-1].size
+    def get_top_color(self):
+        return self.stack[-1].color
+    
+
+class AI:
+    def __init__(self, level, player) -> None:
+        self.level  =  level
+        self.player =  player
+
+    def random_element_first_quarter(my_array):
+        first_quarter_start = 0
+        first_quarter_end = len(my_array) // 4
+        return random.choice(my_array[first_quarter_start:first_quarter_end])
+
+    def random_move(self, board, Maximizing=True):
+        available_moves = board.getAvailableMoves(self.player)
+        available_moves.sort(key=lambda x: x.score, reverse=self.player)
+        if len(available_moves) > 10 :
+            return available_moves[random.randint(0, 5)]
+        else :
+            return available_moves[0]
+
+    def minimax(self, board, maximizing,depth=3):
+        if maximizing:
+            max_eval  = -math.inf
+            best_move = None
+            # get all available moves
+            available_moves = board.getAvailableMoves(self.player)
+            # move ordering based on heuristics
+            available_moves.sort(key=lambda x: x.score, reverse=True)
+
+            if depth == 1:
+                return available_moves[0]
+            # for each move in available moves
+            for move in available_moves:
+                if(move.score > 9000000):
+                    best_move = move
+                    break
+                board.Move(move)
+                evaluated_move = self.minimax(board,False,depth-1)
+                board.Unmove(move)
+                if evaluated_move.score > max_eval:
+                    max_eval = evaluated_move.score
+                    best_move = move
+            return best_move
+        #---------------------------------------------------------------------
+        else:
+            min_eval = math.inf
+            best_move = None
+
+            available_moves = board.getAvailableMoves((self.player + 1) % 2)
+            available_moves.sort(key=lambda x: x.score)
+            if depth == 1:
+                return available_moves[0]
+            for move in available_moves:
+                if(move.score < -9000000):
+                    best_move = move
+                    break
+
+                # temp_board = copy.deepcopy(board)
+                board.Move(move)
+                evaluated_move = self.minimax(board, True,depth-1)
+                board.Unmove(move)
+                if evaluated_move.score < min_eval:
+                    min_eval = evaluated_move.score
+                    best_move = move           
+            return best_move
+
+
+
+
 #Game Options
 
 h_v_h = True
@@ -754,3 +940,5 @@ def Main_Menu():
 
  
 Main_Menu()
+
+
