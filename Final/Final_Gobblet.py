@@ -827,6 +827,188 @@ class Button():
 def get_font_title(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("Fonts/ARCADE.TTF", size)
 
+def H_vs_H():
+    screen.fill("black")
+    game = Game() 
+    illegal = False
+    game_over = False
+    rule = False # Gobble up one of the 3 pieces in a row to prevent the opponent to win 
+    while True:
+        global active_circle
+        global active_player
+        
+        #Change Background Image
+        screen.blit(Background_Img, (0, 0))
+
+        #Add Text Box Title
+        screen.blit(text_box, (WIDTH + RIGHT_MARGIN*2 + 10, HEIGHT - 270))
+
+        MENU_MOUSE_POS = pygame.mouse.get_pos()
+        RESTART_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(1350, 150), 
+                        text_input="RESTART", font=get_font_title(70), base_color="yellow", hovering_color="green")
+        MENU_BUTTON = Button(image=pygame.image.load("Images/Rect.png"), pos=(1350, 250), 
+                        text_input="MENU", font=get_font_title(70), base_color="yellow", hovering_color="green")
+
+        #Display Player Turn
+        if active_player == 'white':
+            screen.blit(w_turn, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 400))
+        if active_player == 'black':
+            screen.blit(b_turn, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 400))
+
+        # Draw all circles
+        for circle in circles:
+            circle.draw(screen)
+
+       # Illegal Play
+        if illegal:
+            screen.blit(text, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 200))
+            if(active_player == 'white'):
+                screen.blit(white_turn,(WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 150))
+            else:
+                screen.blit(black_turn,(WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 150))
+
+        #Check for winner
+        if not illegal:
+            for combo in game.winning_combinations:
+                color_count = {'white': 0, 'black': 0}
+                consecutive = []
+                for center in combo:
+                    if circle_map[center]:
+                        color_count[circle_map[center][-1].color] += 1
+                        consecutive.append(circle_map[center][-1].color)
+                    else :
+                        consecutive.append('')
+                if color_count['white'] == GRID_SIZE:
+                    screen.blit(white_win, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 200))
+                    game_over = True
+                elif color_count['white'] == GRID_SIZE-1 and consecutive[1] == 'white' and consecutive[2] == 'white':
+                    if combo not in game.rule:
+                        game.rule.append(combo)
+                        #print("in combo")
+                    
+                elif color_count['black'] == GRID_SIZE:
+                    screen.blit(black_win, (WIDTH + RIGHT_MARGIN*2 + 20, HEIGHT - 200))
+                    game_over = True
+                elif color_count['black'] == GRID_SIZE-1 and consecutive[1] == 'black' and consecutive[2] == 'black':
+                     if combo not in game.rule:
+                        game.rule.append(combo)
+                        #print("in combo")
+                    
+        for button in [RESTART_BUTTON, MENU_BUTTON]:
+            button.changeColor(MENU_MOUSE_POS)
+            button.update(screen)  
+        # Events
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    mouse_pos = pygame.mouse.get_pos()
+                    if RESTART_BUTTON.checkForInput(mouse_pos):
+                        # Restart the game
+                        circle_map.clear()
+                        circles.clear()
+                        illegal = False
+                        game_over = False
+                        active_player = 'black'
+                        game = Game()           
+                        continue
+                    if MENU_BUTTON.checkForInput(mouse_pos):
+                        circles.clear()
+                        circle_map.clear()
+                        illegal = False
+                        game_over = False
+                        active_player = 'black'                                  
+                        Main_Menu()
+                    
+                    for circle in circles:
+                        if circle.rect.collidepoint(event.pos) and game_over == False:
+                            top_circle = circle
+                            if(circle_map[top_circle.rect.center]):
+                                top_circle = circle_map[top_circle.rect.center][-1]
+
+                            if(top_circle.color != active_player):
+                                illegal=True
+                                break
+                            active_circle_old_x = top_circle.rect.centerx
+                            active_circle_old_y = top_circle.rect.centery
+                            active_circle = top_circle.num
+
+            if event.type == pygame.MOUSEMOTION:
+                if active_circle is not None:
+                    circles[active_circle].rect.move_ip(event.rel)
+
+            if event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1 and active_circle is not None:
+                    # Find the nearest center
+                    dragged_rect = circles[active_circle].rect
+                    nearest_center = min(centers, key=lambda center: math.dist((dragged_rect.centerx, dragged_rect.centery), (center[0],center[1])))
+                    # Compare dragged and placed pieces
+                    overlapping_circle = next((circle for circle in circles if circle.rect.centerx == nearest_center[0] and circle.rect.centery == nearest_center[1] and circle.rect.width >= dragged_rect.width), None)
+                    
+                    old_center = (active_circle_old_x, active_circle_old_y)
+
+                    for com in game.rule:
+                        for center in com:
+                            if (nearest_center[0],nearest_center[1]) == center:
+                                rule = True
+
+                    if overlapping_circle is not None:
+                        # Revert Old Positions
+                        dragged_rect.centerx = active_circle_old_x
+                        dragged_rect.centery = active_circle_old_y
+                        
+                    elif old_center in side_centers and circle_map[(nearest_center[0],nearest_center[1])] != [] and not rule:
+                        # Revert Old Positions
+                        dragged_rect.centerx = active_circle_old_x
+                        dragged_rect.centery = active_circle_old_y
+                        #print("not in rule")
+                    else:                        
+                        # Snap the dragged rectangle to the nearest center
+                        dragged_rect.centerx = nearest_center[0]
+                        dragged_rect.centery = nearest_center[1]
+
+                        # Update board
+                        circle_map[(nearest_center[0],nearest_center[1])].append(circles[active_circle])
+
+                        if circle_map[(active_circle_old_x,active_circle_old_y)]:
+                            circle_map[(active_circle_old_x,active_circle_old_y)].pop()
+
+                        illegal = False
+                        #print("in rule")
+
+                        if old_center in side_centers: 
+                            flag = 1 
+                            move = Move( active_circle_old_y//CELL_SIZE if active_player == 'black' else (active_circle_old_y-CELL_SIZE)//CELL_SIZE,
+                                         0 if active_player == 'black' else 1,
+                                    (nearest_center[1]- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[0]-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    dragged_rect.width//20,
+                                    flag)  
+                        else:
+                            flag = 0
+                            move = Move((active_circle_old_y- CELL_SIZE//2) // CELL_SIZE ,
+                                    (active_circle_old_x-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[1]- CELL_SIZE//2) // CELL_SIZE,
+                                    (nearest_center[0]-LEFT_MARGIN- CELL_SIZE//2) // CELL_SIZE,
+                                    dragged_rect.width//20,
+                                    flag)  
+                            
+                        if active_player == 'white':
+                            active_player = 'black'
+                        else:
+                            active_player = 'white'
+
+                    game.rule = []
+                    rule = False
+                    
+
+                    active_circle = None
+        
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+                
+        pygame.display.flip()
+        
 def options():
     global AI_DIFFICULTY
     global AI_DIFFICULTY_2
