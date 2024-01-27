@@ -11,6 +11,169 @@ from timeout_decorator import timeout
 
 pygame.init()
 
+def make_GUI_Move(move:Move):
+    nearest_centerx = LEFT_MARGIN + (move.to_col * CELL_SIZE) + CELL_SIZE//2
+    nearest_centery = (move.to_row * CELL_SIZE) + CELL_SIZE//2
+
+    if move.flag == 1:
+        active_circle_old_x = (LEFT_MARGIN+WIDTH+CELL_SIZE//2) if move.from_col else (CELL_SIZE*0.5)
+        active_circle_old_y =  ((move.from_row * CELL_SIZE) + 3 * CELL_SIZE//2) if move.from_col else ((move.from_row * CELL_SIZE) + CELL_SIZE//2)
+        for circle in circles:
+            if circle.rect.centerx == active_circle_old_x and circle.rect.centery == active_circle_old_y and circle.rect.width == 20*move.size:
+                circle_map[(nearest_centerx,nearest_centery)].append(circles[circle.num])
+                circle.rect.centerx = nearest_centerx
+                circle.rect.centery = nearest_centery
+    elif move.flag == 0:
+            active_circle_old_x = LEFT_MARGIN + (move.from_col * CELL_SIZE) + CELL_SIZE//2
+            active_circle_old_y = (move.from_row * CELL_SIZE) + CELL_SIZE//2
+            #Update Board
+            id = circle_map[(active_circle_old_x,active_circle_old_y)][-1].num
+            circle_map[(active_circle_old_x,active_circle_old_y)].pop()    
+            circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
+            circles[id].rect.centerx = nearest_centerx
+            circles[id].rect.centery = nearest_centery
+
+
+#Class for Move
+'''
+Encapsulate all move information including the potential score if this move was applied
+Can be used to communicate with the GUI representation keeping each state seperate and 
+only communicate through moves, if both moves are consistent the states should be in sync
+'''
+class Move:
+    def __init__(self, from_row, from_col, to_row, to_col,score,flag,size=0):
+        self.from_row = from_row
+        self.from_col = from_col
+        self.to_row = to_row
+        self.to_col = to_col
+        self.score = score
+        self.flag = flag    # Either 0 for board or 1 for side stack (initialized with piece move and rewritten)
+        self.size = score
+    def __str__(self) -> str:
+        return str(self.from_row) + " " + str(self.from_col) + " " + str(self.to_row) + " " + str(self.to_col) + " " + str(self.score) + " " + str(self.flag)
+
+
+'''
+Main class represent the entire board, consists of :
+- side_stack : initialized with all the pieces
+- board : represents the actual playing board
+'''  
+class Board:
+    def __init__(self) -> None:
+        self.board      = np.zeros((ROWS, COLS), dtype=Gobblet_Stack)
+        self.side_stack = np.zeros((3, 2),       dtype=Gobblet_Stack)
+
+        for row in range(ROWS):
+            for col in range(COLS):
+                self.board[row][col] = Gobblet_Stack([Gobblet("x", 0)])
+
+        # side_stack[][0] -> black
+        # side_stack[][1] -> white
+        self.side_stack[0][1] = Gobblet_Stack([Gobblet("x", 0),gw11, gw21, gw31, gw41])
+        self.side_stack[1][1] = Gobblet_Stack([Gobblet("x", 0),gw12, gw22, gw32, gw42])
+        self.side_stack[2][1] = Gobblet_Stack([Gobblet("x", 0),gw13, gw23, gw33, gw43])
+        
+        self.side_stack[0][0] = Gobblet_Stack([Gobblet("x", 0),gb11, gb21, gb31, gb41])
+        self.side_stack[1][0] = Gobblet_Stack([Gobblet("x", 0),gb12, gb22, gb32, gb42])
+        self.side_stack[2][0] = Gobblet_Stack([Gobblet("x", 0),gb13, gb23, gb33, gb43])
+
+
+    # print(board)
+    def __str__(self) -> str:
+        string = ""
+        for row in range(ROWS):
+            for col in range(COLS):
+                size = str(self.board[row][col].get_top_size())
+                string += '[' + self.board[row][col].get_top_color() + size + ']' + "\t"
+            string += "\n"
+        return string
+
+    # Apply a move to the board
+    def Move(self,move):
+        # Move inside the board
+        if(move.flag == 0):
+            self.board[move.to_row][move.to_col].add_piece(self.board[move.from_row][move.from_col].get_top())
+            self.board[move.from_row][move.from_col].remove_piece()
+        # Move from the side stack
+        # from_col here represents the player
+        if (move.flag == 1):
+            self.board[move.to_row][move.to_col].add_piece(self.side_stack[move.from_row][move.from_col].get_top())
+            self.side_stack[move.from_row][move.from_col].remove_piece()
+
+    # Get the maximum piece int the sidestack
+    # returns the size and the row number
+    def max_side_stack(self,player):
+        max = 0 # Apply only maximum piece in side stack
+        row = 0 # from which sidestack row
+        for i in range(3): # only three sidestack rows
+            if(self.side_stack[i][player].get_top_size() > max):
+                max = self.side_stack[i][player].get_top_size()
+                row = i
+        return max,row
+
+    # Get all current player pieces on board
+    # returns the coordinates and size of each piece
+    def player_pieces_on_board(self,player):
+        coordinates = []
+        for row in range(ROWS):
+            for col in range(COLS):
+                if(self.board[row][col].get_top_color() == player_color[player]):
+                    coordinates.append((row, col,self.board[row][col].get_top_size()))
+        return coordinates
+
+    # Unmove previous move used when constructing the same level in tree
+    def Unmove(self,move):
+        # Move inside the board
+        if(move.flag == 0):
+            self.board[move.from_row][move.from_col].add_piece(self.board[move.to_row][move.to_col].get_top())
+            self.board[move.to_row][move.to_col].remove_piece()
+        # Move from the side stack
+        if (move.flag == 1):
+            self.side_stack[move.from_row][move.from_col].add_piece(self.board[move.to_row][move.to_col].get_top())
+            self.board[move.to_row][move.to_col].remove_piece()
+
+
+
+    '''
+From Gobblet rules : If you put a new gobblet in play, you must place it on an empty square.
+However, there is one exception to this rule:
+- if your opponent already has 3 gobblets in a row on the board, you may gobble up 1 of the 3 pieces 
+    in the line with a gobblet taken directly from one  of your external stacks.
+
+This function is used to do this check in order to decide whether you can play from side stack 
+to a non-empty square directly or not
+'''
+def get_three_in_a_row(self,player,row,col):
+    # check rows
+    # Remember to check for empty squares
+    if(self.board[row][1].get_top_color() == self.board[row][2].get_top_color() and self.board[row][2].get_top_color() != player_color[player]):
+        if(self.board[row][0].get_top_color() == self.board[row][1].get_top_color()):
+            return True
+        elif(self.board[row][3].get_top_color() == self.board[row][2].get_top_color()):
+            return True
+
+
+    if(self.board[1][col].get_top_color() == self.board[2][col].get_top_color() and self.board[2][col].get_top_color() != player_color[player]):
+        if(self.board[0][col].get_top_color() == self.board[1][col].get_top_color()):
+            return True
+        elif(self.board[3][col].get_top_color() == self.board[2][col].get_top_color()):
+            return True
+
+    if (row == col) :
+        if(self.board[1][1].get_top_color() == self.board[2][2].get_top_color() and self.board[2][2].get_top_color() != player_color[player]):
+            if(self.board[0][0].get_top_color() == self.board[1][1].get_top_color()):
+                return True
+            elif(self.board[2][2].get_top_color() == self.board[3][3].get_top_color()):
+                return True
+
+    if(row == ROWS-col):
+        if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color() and self.board[2][1].get_top_color() != player_color[player]):
+            if(self.board[0][3].get_top_color() == self.board[1][2].get_top_color()):
+                return True
+        if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color()):
+            if(self.board[2][1] == self.board[3][0].get_top_color()):
+                return True
+                
 #Game Options
 
 h_v_h = True
