@@ -566,8 +566,101 @@ class AI:
                     min_eval = evaluated_move.score
                     best_move = move           
             return best_move
+    
+    def minimax_alpha_beta(self, board, maximizing, alpha, beta, depth=7):
+        if maximizing:
+            max_eval = -math.inf
+            available_moves = board.getAvailableMoves(self.player)
+            available_moves.sort(key=lambda x: x.score,reverse=True)
+            best_move = available_moves[0]
 
+            # print(board)
 
+            if depth == 1:
+                return available_moves[0]
+
+            for move in available_moves:
+                if(move.score > 9000000):
+                    best_move = move
+                    break
+                # temp_board = copy.deepcopy(board)
+                board.Move(move)
+                evaluated_move = self.minimax_alpha_beta(board, False, alpha, beta, depth-1)
+                board.Unmove(move)
+                if evaluated_move.score > max_eval:
+                    max_eval = evaluated_move.score
+                    best_move = move
+                alpha = max(alpha, evaluated_move.score)
+                if beta <= alpha:
+                    break
+            return best_move
+        else:
+            min_eval = math.inf
+
+            available_moves = board.getAvailableMoves((self.player + 1) % 2)
+            available_moves.sort(key=lambda x: x.score)
+            best_move = available_moves[0]
+
+            # print(board)
+
+            if depth == 1:
+                return available_moves[0]
+
+            for move in available_moves:
+                # temp_board = copy.deepcopy(board)
+                if(move.score < -9000000):
+                    best_move = move
+                    break
+                board.Move(move)
+                evaluated_move = self.minimax_alpha_beta(board, True, alpha, beta, depth-1)
+                board.Unmove(move)
+                if evaluated_move.score < min_eval:
+                    min_eval = evaluated_move.score
+                    best_move = move
+                beta = min(beta, evaluated_move.score)
+                if beta <= alpha:
+                    break
+            return best_move
+
+    # set a timer for the function and explore the tree as much as possible
+    # start with depth 2 and increase it by 1 every time until the timer is up
+    # use transposition table to cache already seen scores
+    # return the best move found
+    @timeout(60)  # Set the timeout to 60 seconds.
+    def minimax_alpha_beta_iterative(self, board, time_limit, depth=0):
+        while True:
+            try:
+                move = self.minimax_alpha_beta(board, True, -math.inf, math.inf, depth + 1)
+            except TimeoutError:
+                print("Function timed out")
+                break
+        return move
+
+    def evaluate(self, board, maximizer = True):
+        if self.level == 0:
+            move = self.random_move(board)
+        elif(self.level == 1):
+            # move = self.minimax(board,True,3)
+            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,2)
+        else :
+            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,3)
+        return move
+
+class Logic:
+    def __init__(self,level,player, level_2 = 0) -> None:
+        self.board = Board()
+        self.player = player
+        self.AI = AI(level,player)
+        self.AI_2 = AI(level_2, (player+1)%2)
+        self.game_mode = 'AI'
+        self.running = True
+
+    def next_turn(self):
+        self.player = ((self.player + 1) % 2)
+
+    def make_move(self,move):
+        self.board.Move(move)
+        self.next_turn()    
 
 
 #Game Options
