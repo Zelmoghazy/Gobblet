@@ -7,7 +7,27 @@ import time
 import sys
 import math
 import numpy as np
-from timeout_decorator import timeout
+from datetime import datetime
+import multiprocessing
+
+ROWS = 4
+COLS = 4
+
+player_color = {
+    0: 'b', # Minimizer
+    1: 'w'  # Maximizer -> starts first 
+}
+
+'''
+set different score for each piece size
+'''
+size_score = {
+    0: 0,
+    1: 1,
+    2: 20,
+    3: 50,
+    4: 100
+}
 
 '''
 Pattern based heuristic calculation
@@ -98,29 +118,6 @@ Heuristic = {
 }
 
 
-pygame.init()
-
-def make_GUI_Move(move:Move):
-    nearest_centerx = LEFT_MARGIN + (move.to_col * CELL_SIZE) + CELL_SIZE//2
-    nearest_centery = (move.to_row * CELL_SIZE) + CELL_SIZE//2
-
-    if move.flag == 1:
-        active_circle_old_x = (LEFT_MARGIN+WIDTH+CELL_SIZE//2) if move.from_col else (CELL_SIZE*0.5)
-        active_circle_old_y =  ((move.from_row * CELL_SIZE) + 3 * CELL_SIZE//2) if move.from_col else ((move.from_row * CELL_SIZE) + CELL_SIZE//2)
-        for circle in circles:
-            if circle.rect.centerx == active_circle_old_x and circle.rect.centery == active_circle_old_y and circle.rect.width == 20*move.size:
-                circle_map[(nearest_centerx,nearest_centery)].append(circles[circle.num])
-                circle.rect.centerx = nearest_centerx
-                circle.rect.centery = nearest_centery
-    elif move.flag == 0:
-            active_circle_old_x = LEFT_MARGIN + (move.from_col * CELL_SIZE) + CELL_SIZE//2
-            active_circle_old_y = (move.from_row * CELL_SIZE) + CELL_SIZE//2
-            #Update Board
-            id = circle_map[(active_circle_old_x,active_circle_old_y)][-1].num
-            circle_map[(active_circle_old_x,active_circle_old_y)].pop()    
-            circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
-            circles[id].rect.centerx = nearest_centerx
-            circles[id].rect.centery = nearest_centery
 
 
 '''
@@ -626,15 +623,27 @@ class AI:
     # start with depth 2 and increase it by 1 every time until the timer is up
     # use transposition table to cache already seen scores
     # return the best move found
-    @timeout(60)  # Set the timeout to 60 seconds.
-    def minimax_alpha_beta_iterative(self, board, time_limit, depth=0):
+    def minimax_alpha_beta_iterative(self, board, time_limit, max_depth=0):
+        manager = multiprocessing.Manager() 
+        best_move = manager.Value(Move, Move(0, 0, 0, 0, 0, 0)) # Shared Object
+        depth = 1
+        elapsed_time = 0
+        start_time = datetime.now()
         while True:
-            try:
-                move = self.minimax_alpha_beta(board, True, -math.inf, math.inf, depth + 1)
-            except TimeoutError:
-                print("Function timed out")
-                break
-        return move
+            p = multiprocessing.Process(target=self.minimax_alpha_beta_ret,
+                                        args=(board, True, -math.inf, math.inf, depth, best_move)) # spawn a process
+            p.start()
+            p.join(max(0, time_limit - (datetime.now() - start_time).total_seconds())) #await
+            elapsed_time = datetime.now() - start_time
+            print(elapsed_time)
+            if elapsed_time.total_seconds() >= time_limit or depth >= max_depth:
+                break  # Exit the loop if time limit is reached or max depth is reached
+            if p.is_alive():
+                print(f"Terminating the process for depth {depth}... time limit not reached yet.")
+                p.terminate()
+            depth += 1
+        print(depth)
+        return best_move.value
 
     def evaluate(self, board, maximizer = True):
         if self.level == 0:
@@ -663,8 +672,31 @@ class Logic:
         self.next_turn()    
 
 
-#Game Options
+pygame.init()
 
+def make_GUI_Move(move:Move):
+    nearest_centerx = LEFT_MARGIN + (move.to_col * CELL_SIZE) + CELL_SIZE//2
+    nearest_centery = (move.to_row * CELL_SIZE) + CELL_SIZE//2
+
+    if move.flag == 1:
+        active_circle_old_x = (LEFT_MARGIN+WIDTH+CELL_SIZE//2) if move.from_col else (CELL_SIZE*0.5)
+        active_circle_old_y =  ((move.from_row * CELL_SIZE) + 3 * CELL_SIZE//2) if move.from_col else ((move.from_row * CELL_SIZE) + CELL_SIZE//2)
+        for circle in circles:
+            if circle.rect.centerx == active_circle_old_x and circle.rect.centery == active_circle_old_y and circle.rect.width == 20*move.size:
+                circle_map[(nearest_centerx,nearest_centery)].append(circles[circle.num])
+                circle.rect.centerx = nearest_centerx
+                circle.rect.centery = nearest_centery
+    elif move.flag == 0:
+            active_circle_old_x = LEFT_MARGIN + (move.from_col * CELL_SIZE) + CELL_SIZE//2
+            active_circle_old_y = (move.from_row * CELL_SIZE) + CELL_SIZE//2
+            #Update Board
+            id = circle_map[(active_circle_old_x,active_circle_old_y)][-1].num
+            circle_map[(active_circle_old_x,active_circle_old_y)].pop()    
+            circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
+            circles[id].rect.centerx = nearest_centerx
+            circles[id].rect.centery = nearest_centery
+
+#Game Options
 h_v_h = True
 h_v_ai = False
 ai_v_ai = False
