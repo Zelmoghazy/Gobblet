@@ -1,13 +1,15 @@
 # Gobblet
-* Gobblet is a board game played on a 4×4 grid.
+* Gobblet is an abstract game played on a 4x4 grid with each of the two players starting with twelve pieces that can nest on top of one another.
+* The goal is to line up four gobblets of your color in a row. It's easy to play, but hard to master!
+## Game Rules
 * Each player has three stacks of pieces, all of the same color, and each stack consists of four pieces of different sizes.
 * At the beginning of the game, each stack is arranged outside the playing area in such a way that the smaller piece is covered by the larger one.
 * **Players take turns and in each turn, they have two options:**
     * Place a new piece from the external stack onto the playing board.
     * Move a piece that is already on the board to a different position.
- * New pieces can only be taken in order of size, meaning only the piece that is on top of one of the stacks can be chosen.
+ * New pieces from external stacks can only be taken in order of size, meaning only the piece that is on top of one of the stacks can be chosen.
     * It can be placed only on an empty square, with the exception of cases where the opponent has three of their pieces in a row, column, or diagonally, In this case, the new piece can cover one of these three opponent's pieces.
-* Moving a piece is allowed to any square where only smaller pieces are placed, allowing the moved piece to cover them.
+* Moving a piece that is already on the board is allowed to any square where only smaller pieces are placed, allowing the moved piece to cover them.
     * It is allowed to cover one's own pieces or move a piece to an empty square.
     
 ![Alt text](Images/Gobblet_hCHjpetnfw.png)
@@ -51,4 +53,6 @@
     * in ID many nodes are explored multiple times, so ID must be coupled with caching techniques for scores in already visited levels and move ordering for it to be better than just searching through a certain depth.
 
 # Snapshots
-
+![Alt text](Images/Gobblet_ZaEZW1L1EG.png)
+![Alt text](Images/Gobblet_pPPKBss3Ly.png)
+![Alt text](Images/Gobblet_1hBax0Dk1Q.png)
