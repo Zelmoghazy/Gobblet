@@ -14,6 +14,41 @@
     
 ![Alt text](Images/Gobblet_hCHjpetnfw.png)
 
+## Game Playing Algorithms
+
+### Minimax
+* The minimax theorem states that for every two-player, zero-sum game (finite strategy space), there exists a value `V` and mixed strategies for each player, such that:
+    * With the strategy given for the other player, the best possible result for the first player is `V`, and
+    * With the strategy given for the first player, the best possible result for the second player is `-V`.
+    * Equivalently, the strategy of the first player ensures a result of `V` regardless of the strategy of the second player.
+    * Similarly, the strategy of the second player ensures a result of `-V`.
+* The term "minimax" comes from the fact that each player tries to minimize the maximum result for the opposing player.
+    * Since these are zero-sum games, it also means minimizing their own maximum loss or maximizing their minimum result.
+
+* Two players, named MAX and MIN, make moves with pieces until the game ends. At the end of the game, the winner receives the maximum number of points, and the loser receives the minimum. Formally, it is a search problem with the following components:
+    * The initial state is the state of the game board and information about which player is on the move.
+    * The function for generating new states returns a set of pairs (move, new state), where each pair represents a valid move and the state after the move.
+    * The end state test checks whether the game is over and reports the winner. States in which the game ends are final states.
+    * The evaluation function provides a numerical value for the end state. In zero-sum games, the evaluation of the second player is the opposite of the evaluation of the first player.
+
+* While minimax finds the optimal solution (i.e., the most advantageous move in a given state of the game), it is highly inefficient. 
+
+### Alpha-Beta Pruning
+
+* Due to the exponential expansion of the tree in the minimax algorithm, it is necessary to employ certain optimizations. The most common methods involve pruning unpromising branches of the tree, and one frequently used technique is alpha-beta pruning.
+
+* The alpha-beta algorithm follows the principles of the minimax algorithm but is based on the idea that for moves that are good enough, it is not necessary to precisely determine how good they are. Similarly, for moves that are worse than the currently evaluated ones, there is no need to know exactly how bad they are.
+
+* The alpha-beta algorithm is named after the parameters that represent bounds for the backward propagation of scores during the depth-first search. 
+    * α is the value of the best score found so far on the path for the MAX player.
+    * β is the value of the best score on the path for the MIN player.
+    * Alpha-beta search updates the values of α and β and prunes the remaining subtrees as soon as the score of their node falls below the current value of α or β for the MAX or MIN player.
+
+* While alpha-beta pruning significantly reduces the size of the game tree, guaranteeing the discovery of the optimal solution, its efficiency is highly influenced by the order in which individual moves are explored.
+    * If the best move is always tried first, the other moves at that level get "cut off." In such a case, only the square root of number of nodes of what standard minimax explores are explored. 
+    * In other words, alpha-beta pruning can, under optimal conditions, explore a tree twice as deep as minimax in the same amount of time.
+    * The efficiency of these two algorithms is the same if the moves are explored in the worst order, i.e., the best move is tried last. This implies that even with a random ordering of moves, alpha-beta pruning is likely to be more effective than minimax alone.
+
 ## Heuristics
 * Since alpha-beta pruning, with appropriate move ordering, can enhance the efficiency of tree traversal. 
     * Ideally, it can result in pruning up to the square root of the total number of visited nodes in the tree. The goal is to get as close as possible to this state.
