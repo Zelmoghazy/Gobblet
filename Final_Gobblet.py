@@ -1,12 +1,10 @@
 import pygame
 import math
-from collections import defaultdict
-import copy
 import random
-import time
 import sys
 import math
 import numpy as np
+from collections import defaultdict
 from datetime import datetime
 import multiprocessing
 
@@ -117,9 +115,6 @@ Heuristic = {
     'bbbb': -10000000
 }
 
-
-
-
 '''
 Each gobblet on board is completely represented by its color and size
 '''
@@ -129,7 +124,6 @@ class Gobblet:
         self.size = size
     def __str__(self) -> str:
         return self.color + " " + self.size
-
 
 '''
 Each square on board is represented as a stack
@@ -161,6 +155,9 @@ class Gobblet_Stack:
     def get_top_color(self):
         return self.stack[-1].color
 
+'''
+All gobblet objects 3 of each size for each player
+'''
 gw11 = Gobblet("w", 1)
 gw12 = Gobblet("w", 1)
 gw13 = Gobblet("w", 1)
@@ -196,8 +193,8 @@ gb43 = Gobblet("b", 4)
 
 '''
 Main class represent the entire board, consists of :
-- side_stack : initialized with all the pieces
-- board : represents the actual playing board
+    - side_stack : initialized with all the pieces
+    - board : represents the actual playing board
 '''  
 class Board:
     def __init__(self) -> None:
@@ -217,7 +214,6 @@ class Board:
         self.side_stack[0][0] = Gobblet_Stack([Gobblet("x", 0),gb11, gb21, gb31, gb41])
         self.side_stack[1][0] = Gobblet_Stack([Gobblet("x", 0),gb12, gb22, gb32, gb42])
         self.side_stack[2][0] = Gobblet_Stack([Gobblet("x", 0),gb13, gb23, gb33, gb43])
-
 
     # print(board)
     def __str__(self) -> str:
@@ -398,8 +394,8 @@ class Board:
     '''
     From Gobblet rules : If you put a new gobblet in play, you must place it on an empty square.
     However, there is one exception to this rule:
-    - if your opponent already has 3 gobblets in a row on the board, you may gobble up 1 of the 3 pieces 
-        in the line with a gobblet taken directly from one  of your external stacks.
+        - if your opponent already has 3 gobblets in a row on the board, you may gobble up 1 of the 3 pieces 
+            in the line with a gobblet taken directly from one  of your external stacks.
 
     This function is used to do this check in order to decide whether you can play from side stack 
     to a non-empty square directly or not
@@ -687,6 +683,7 @@ class AI:
                 score=best_move.score
             )
             return best_move
+
     # set a timer for the function and explore the tree as much as possible
     # start with depth 2 and increase it by 1 every time until the timer is up
     # use transposition table to cache already seen scores
@@ -1728,5 +1725,3 @@ def Main_Menu():
 
  
 Main_Menu()
-
-
