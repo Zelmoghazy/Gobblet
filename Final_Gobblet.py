@@ -130,6 +130,37 @@ class Gobblet:
     def __str__(self) -> str:
         return self.color + " " + self.size
 
+
+'''
+Each square on board is represented as a stack
+each stack is initialized with a dummy gobblet of color 'x' 
+and size = 0, this is required for easy score calculation later
+'''
+class Gobblet_Stack:
+    def __init__(self, Gobblet_Stack) -> None:
+        self.stack = list(Gobblet_Stack)
+    def __str__(self) -> str:
+        str=""
+        for i in range(len(self.stack)):
+            str += str(self.stack[i]) + " "
+        return str
+    def add_piece(self, piece):
+        self.stack.append(piece)
+    def remove_piece(self):
+        self.stack.pop()
+    def is_empty(self):
+        return self.stack[-1].color == "x"
+    def is_full(self):
+        return len(self.stack) == 5
+    def get_top(self):
+        return self.stack[-1]
+    def get_stack_size(self):
+        return len(self.stack)
+    def get_top_size(self):
+        return self.stack[-1].size
+    def get_top_color(self):
+        return self.stack[-1].color
+
 gw11 = Gobblet("w", 1)
 gw12 = Gobblet("w", 1)
 gw13 = Gobblet("w", 1)
@@ -161,27 +192,6 @@ gb33 = Gobblet("b", 3)
 gb41 = Gobblet("b", 4)  
 gb42 = Gobblet("b", 4)
 gb43 = Gobblet("b", 4)
-
-
-
-
-#Class for Move
-'''
-Encapsulate all move information including the potential score if this move was applied
-Can be used to communicate with the GUI representation keeping each state seperate and 
-only communicate through moves, if both moves are consistent the states should be in sync
-'''
-class Move:
-    def __init__(self, from_row, from_col, to_row, to_col,score,flag,size=0):
-        self.from_row = from_row
-        self.from_col = from_col
-        self.to_row = to_row
-        self.to_col = to_col
-        self.score = score
-        self.flag = flag    # Either 0 for board or 1 for side stack (initialized with piece move and rewritten)
-        self.size = score
-    def __str__(self) -> str:
-        return str(self.from_row) + " " + str(self.from_col) + " " + str(self.to_row) + " " + str(self.to_col) + " " + str(self.score) + " " + str(self.flag)
 
 
 '''
@@ -386,131 +396,112 @@ class Board:
     
 
     '''
-From Gobblet rules : If you put a new gobblet in play, you must place it on an empty square.
-However, there is one exception to this rule:
-- if your opponent already has 3 gobblets in a row on the board, you may gobble up 1 of the 3 pieces 
-    in the line with a gobblet taken directly from one  of your external stacks.
+    From Gobblet rules : If you put a new gobblet in play, you must place it on an empty square.
+    However, there is one exception to this rule:
+    - if your opponent already has 3 gobblets in a row on the board, you may gobble up 1 of the 3 pieces 
+        in the line with a gobblet taken directly from one  of your external stacks.
 
-This function is used to do this check in order to decide whether you can play from side stack 
-to a non-empty square directly or not
-'''
-def get_three_in_a_row(self,player,row,col):
-    # check rows
-    # Remember to check for empty squares
-    if(self.board[row][1].get_top_color() == self.board[row][2].get_top_color() and self.board[row][2].get_top_color() != player_color[player]):
-        if(self.board[row][0].get_top_color() == self.board[row][1].get_top_color()):
-            return True
-        elif(self.board[row][3].get_top_color() == self.board[row][2].get_top_color()):
-            return True
-
-
-    if(self.board[1][col].get_top_color() == self.board[2][col].get_top_color() and self.board[2][col].get_top_color() != player_color[player]):
-        if(self.board[0][col].get_top_color() == self.board[1][col].get_top_color()):
-            return True
-        elif(self.board[3][col].get_top_color() == self.board[2][col].get_top_color()):
-            return True
-
-    if (row == col) :
-        if(self.board[1][1].get_top_color() == self.board[2][2].get_top_color() and self.board[2][2].get_top_color() != player_color[player]):
-            if(self.board[0][0].get_top_color() == self.board[1][1].get_top_color()):
+    This function is used to do this check in order to decide whether you can play from side stack 
+    to a non-empty square directly or not
+    '''
+    def get_three_in_a_row(self,player,row,col):
+        # check rows
+        # Remember to check for empty squares
+        if(self.board[row][1].get_top_color() == self.board[row][2].get_top_color() and self.board[row][2].get_top_color() != player_color[player]):
+            if(self.board[row][0].get_top_color() == self.board[row][1].get_top_color()):
                 return True
-            elif(self.board[2][2].get_top_color() == self.board[3][3].get_top_color()):
-                return True
-
-    if(row == ROWS-col):
-        if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color() and self.board[2][1].get_top_color() != player_color[player]):
-            if(self.board[0][3].get_top_color() == self.board[1][2].get_top_color()):
-                return True
-        if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color()):
-            if(self.board[2][1] == self.board[3][0].get_top_color()):
+            elif(self.board[row][3].get_top_color() == self.board[row][2].get_top_color()):
                 return True
 
 
+        if(self.board[1][col].get_top_color() == self.board[2][col].get_top_color() and self.board[2][col].get_top_color() != player_color[player]):
+            if(self.board[0][col].get_top_color() == self.board[1][col].get_top_color()):
+                return True
+            elif(self.board[3][col].get_top_color() == self.board[2][col].get_top_color()):
+                return True
 
-# Returns all possible moves of player from a certain state
-# 1 - From the sidestack to an empty square on the board
-# 2 - From board to either empty square on board or a smaller piece
-# 3 - From sidestack to board, only if 3 of opponents pieces are in row
-def getAvailableMoves(self,player):
-    moves = []
+        if (row == col) :
+            if(self.board[1][1].get_top_color() == self.board[2][2].get_top_color() and self.board[2][2].get_top_color() != player_color[player]):
+                if(self.board[0][0].get_top_color() == self.board[1][1].get_top_color()):
+                    return True
+                elif(self.board[2][2].get_top_color() == self.board[3][3].get_top_color()):
+                    return True
 
-    # get maximum piece in side stack and its size
-    max,side_row = self.max_side_stack(player)
+        if(row == ROWS-col):
+            if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color() and self.board[2][1].get_top_color() != player_color[player]):
+                if(self.board[0][3].get_top_color() == self.board[1][2].get_top_color()):
+                    return True
+            if(self.board[1][2].get_top_color() == self.board[2][1].get_top_color()):
+                if(self.board[2][1] == self.board[3][0].get_top_color()):
+                    return True
 
-    # get all player pieces on board
-    player_pieces_on_board = self.player_pieces_on_board(player) 
 
-    for row in range(ROWS):      
-        for col in range(COLS):
-            if self.board[row][col].is_empty():
-                # Make move from side stack to an empty square 
-                move = Move(side_row,player,row,col,max,1)
-                move.score = self.get_score(move,player)
-                moves.append(move)
-                # Make move from board to an empty square
-                for piece in player_pieces_on_board:
-                    move = Move(piece[0],piece[1],row,col,piece[2],0)
-                    move.score = self.get_score(move,player)
-                    moves.append(move)
-            # Make move to a smaller piece
-            # Optimization: check only for opponent pieces on board
-            elif self.board[row][col].get_top_color() != player_color[player]:
-                # only if its row or column or diagonal contains three pieces from opponent
-                # its legal to gobble from external stack to board
-                # otherwise its only allowed to be place on an empty square
-                if(self.board[row][col].get_top_size() < max and self.get_three_in_a_row(player,row,col)):
+
+    # Returns all possible moves of player from a certain state
+    # 1 - From the sidestack to an empty square on the board
+    # 2 - From board to either empty square on board or a smaller piece
+    # 3 - From sidestack to board, only if 3 of opponents pieces are in row
+    def getAvailableMoves(self,player):
+        moves = []
+
+        # get maximum piece in side stack and its size
+        max,side_row = self.max_side_stack(player)
+
+        # get all player pieces on board
+        player_pieces_on_board = self.player_pieces_on_board(player) 
+
+        for row in range(ROWS):      
+            for col in range(COLS):
+                if self.board[row][col].is_empty():
+                    # Make move from side stack to an empty square 
                     move = Move(side_row,player,row,col,max,1)
                     move.score = self.get_score(move,player)
                     moves.append(move)
-                for piece in player_pieces_on_board:
-                    if(self.board[row][col].get_top_size() < piece[2]):
+                    # Make move from board to an empty square
+                    for piece in player_pieces_on_board:
                         move = Move(piece[0],piece[1],row,col,piece[2],0)
                         move.score = self.get_score(move,player)
                         moves.append(move)
-    return moves
+                # Make move to a smaller piece
+                # Optimization: check only for opponent pieces on board
+                elif self.board[row][col].get_top_color() != player_color[player]:
+                    # only if its row or column or diagonal contains three pieces from opponent
+                    # its legal to gobble from external stack to board
+                    # otherwise its only allowed to be place on an empty square
+                    if(self.board[row][col].get_top_size() < max and self.get_three_in_a_row(player,row,col)):
+                        move = Move(side_row,player,row,col,max,1)
+                        move.score = self.get_score(move,player)
+                        moves.append(move)
+                    for piece in player_pieces_on_board:
+                        if(self.board[row][col].get_top_size() < piece[2]):
+                            move = Move(piece[0],piece[1],row,col,piece[2],0)
+                            move.score = self.get_score(move,player)
+                            moves.append(move)
+        return moves
 
 '''
-Each square on board is represented as a stack
-each stack is initialized with a dummy gobblet of color 'x' 
-and size = 0, this is required for easy score calculation later
+Encapsulate all move information including the potential score if this move was applied
+Can be used to communicate with the GUI representation keeping each state seperate and 
+only communicate through moves, if both moves are consistent the states should be in sync
 '''
-class Gobblet_Stack:
-    def __init__(self, Gobblet_Stack) -> None:
-        self.stack = list(Gobblet_Stack)
+class Move:
+    def __init__(self, from_row, from_col, to_row, to_col,score,flag,size=0):
+        self.from_row = from_row
+        self.from_col = from_col
+        self.to_row = to_row
+        self.to_col = to_col
+        self.score = score
+        self.flag = flag    # Either 0 for board or 1 for side stack (initialized with piece move and rewritten)
+        self.size = score
     def __str__(self) -> str:
-        str=""
-        for i in range(len(self.stack)):
-            str += str(self.stack[i]) + " "
-        return str
-    def add_piece(self, piece):
-        self.stack.append(piece)
-    def remove_piece(self):
-        self.stack.pop()
-    def is_empty(self):
-        return self.stack[-1].color == "x"
-    def is_full(self):
-        return len(self.stack) == 5
-    def get_top(self):
-        return self.stack[-1]
-    def get_stack_size(self):
-        return len(self.stack)
-    def get_top_size(self):
-        return self.stack[-1].size
-    def get_top_color(self):
-        return self.stack[-1].color
-    
+        return str(self.from_row) + " " + str(self.from_col) + " " + str(self.to_row) + " " + str(self.to_col) + " " + str(self.score) + " " + str(self.flag)
 
 class AI:
     def __init__(self, level, player) -> None:
         self.level  =  level
         self.player =  player
 
-    def random_element_first_quarter(my_array):
-        first_quarter_start = 0
-        first_quarter_end = len(my_array) // 4
-        return random.choice(my_array[first_quarter_start:first_quarter_end])
-
-    def random_move(self, board, Maximizing=True):
+    def random_move(self, board):
         available_moves = board.getAvailableMoves(self.player)
         available_moves.sort(key=lambda x: x.score, reverse=self.player)
         if len(available_moves) > 10 :
@@ -555,7 +546,6 @@ class AI:
                     best_move = move
                     break
 
-                # temp_board = copy.deepcopy(board)
                 board.Move(move)
                 evaluated_move = self.minimax(board, True,depth-1)
                 board.Unmove(move)
@@ -580,7 +570,6 @@ class AI:
                 if(move.score > 9000000):
                     best_move = move
                     break
-                # temp_board = copy.deepcopy(board)
                 board.Move(move)
                 evaluated_move = self.minimax_alpha_beta(board, False, alpha, beta, depth-1)
                 board.Unmove(move)
@@ -604,7 +593,6 @@ class AI:
                 return available_moves[0]
 
             for move in available_moves:
-                # temp_board = copy.deepcopy(board)
                 if(move.score < -9000000):
                     best_move = move
                     break
@@ -619,6 +607,86 @@ class AI:
                     break
             return best_move
 
+    def minimax_alpha_beta_ret(self, board, maximizing, alpha, beta, depth,ret_move):
+        if maximizing:
+            max_eval = -math.inf
+            available_moves = board.getAvailableMoves(self.player)
+            available_moves.sort(key=lambda x: x.score,reverse=True)
+            best_move = available_moves[0]
+
+            # print(board)
+
+            if depth == 1:
+                ret_move.value = Move(
+                    from_row=available_moves[0].from_row,
+                    from_col=available_moves[0].from_col,
+                    to_row=available_moves[0].to_row,
+                    to_col=available_moves[0].to_col,
+                    flag=available_moves[0].flag,
+                    score=available_moves[0].score
+                )
+                return available_moves[0]
+
+            for move in available_moves:
+                # temp_board = copy.deepcopy(board)
+                board.Move(move)
+                evaluated_move = self.minimax_alpha_beta(board, False, alpha, beta, depth-1)
+                board.Unmove(move)
+                if evaluated_move.score > max_eval:
+                    max_eval = evaluated_move.score
+                    best_move = move
+                alpha = max(alpha, evaluated_move.score)
+                if beta <= alpha:
+                    break
+            ret_move.value = Move(
+                from_row=best_move.from_row,
+                from_col=best_move.from_col,
+                to_row=best_move.to_row,
+                to_col=best_move.to_col,
+                flag=best_move.flag,
+                score=best_move.score
+            )
+            return best_move
+        else:
+            min_eval = math.inf
+
+            available_moves = board.getAvailableMoves((self.player + 1) % 2)
+            available_moves.sort(key=lambda x: x.score)
+            best_move = available_moves[0]
+
+            # print(board)
+
+            if depth == 1:
+                ret_move.value = Move(
+                    from_row=available_moves[0].from_row,
+                    from_col=available_moves[0].from_col,
+                    to_row=available_moves[0].to_row,
+                    to_col=available_moves[0].to_col,
+                    flag=available_moves[0].flag,
+                    score=available_moves[0].score
+                )
+                return available_moves[0]
+
+            for move in available_moves:
+                # temp_board = copy.deepcopy(board)
+                board.Move(move)
+                evaluated_move = self.minimax_alpha_beta(board, True, alpha, beta, depth-1)
+                board.Unmove(move)
+                if evaluated_move.score < min_eval:
+                    min_eval = evaluated_move.score
+                    best_move = move
+                beta = min(beta, evaluated_move.score)
+                if beta <= alpha:
+                    break
+            ret_move.value = Move(
+                from_row=best_move.from_row,
+                from_col=best_move.from_col,
+                to_row=best_move.to_row,
+                to_col=best_move.to_col,
+                flag=best_move.flag,
+                score=best_move.score
+            )
+            return best_move
     # set a timer for the function and explore the tree as much as possible
     # start with depth 2 and increase it by 1 every time until the timer is up
     # use transposition table to cache already seen scores
@@ -649,12 +717,14 @@ class AI:
         if self.level == 0:
             move = self.random_move(board)
         elif(self.level == 1):
-            # move = self.minimax(board,True,3)
-            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,2)
+            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,1)
         else :
-            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,3)
+            move = self.minimax_alpha_beta(board,maximizer,-math.inf,math.inf,2)
         return move
 
+'''
+Encapsulate Backend AI Logic for GUI
+'''
 class Logic:
     def __init__(self,level,player, level_2 = 0) -> None:
         self.board = Board()
@@ -672,29 +742,13 @@ class Logic:
         self.next_turn()    
 
 
+'''
+--------------------------------------------------------------------------
+---------------------------- GUI -----------------------------------------
+--------------------------------------------------------------------------
+'''
 pygame.init()
 
-def make_GUI_Move(move:Move):
-    nearest_centerx = LEFT_MARGIN + (move.to_col * CELL_SIZE) + CELL_SIZE//2
-    nearest_centery = (move.to_row * CELL_SIZE) + CELL_SIZE//2
-
-    if move.flag == 1:
-        active_circle_old_x = (LEFT_MARGIN+WIDTH+CELL_SIZE//2) if move.from_col else (CELL_SIZE*0.5)
-        active_circle_old_y =  ((move.from_row * CELL_SIZE) + 3 * CELL_SIZE//2) if move.from_col else ((move.from_row * CELL_SIZE) + CELL_SIZE//2)
-        for circle in circles:
-            if circle.rect.centerx == active_circle_old_x and circle.rect.centery == active_circle_old_y and circle.rect.width == 20*move.size:
-                circle_map[(nearest_centerx,nearest_centery)].append(circles[circle.num])
-                circle.rect.centerx = nearest_centerx
-                circle.rect.centery = nearest_centery
-    elif move.flag == 0:
-            active_circle_old_x = LEFT_MARGIN + (move.from_col * CELL_SIZE) + CELL_SIZE//2
-            active_circle_old_y = (move.from_row * CELL_SIZE) + CELL_SIZE//2
-            #Update Board
-            id = circle_map[(active_circle_old_x,active_circle_old_y)][-1].num
-            circle_map[(active_circle_old_x,active_circle_old_y)].pop()    
-            circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
-            circles[id].rect.centerx = nearest_centerx
-            circles[id].rect.centery = nearest_centery
 
 #Game Options
 h_v_h = True
@@ -858,6 +912,28 @@ class Button():
 
 def get_font_title(size): # Returns Press-Start-2P in the desired size
     return pygame.font.Font("Fonts/ARCADE.TTF", size)
+
+def make_GUI_Move(move:Move):
+    nearest_centerx = LEFT_MARGIN + (move.to_col * CELL_SIZE) + CELL_SIZE//2
+    nearest_centery = (move.to_row * CELL_SIZE) + CELL_SIZE//2
+
+    if move.flag == 1:
+        active_circle_old_x = (LEFT_MARGIN+WIDTH+CELL_SIZE//2) if move.from_col else (CELL_SIZE*0.5)
+        active_circle_old_y =  ((move.from_row * CELL_SIZE) + 3 * CELL_SIZE//2) if move.from_col else ((move.from_row * CELL_SIZE) + CELL_SIZE//2)
+        for circle in circles:
+            if circle.rect.centerx == active_circle_old_x and circle.rect.centery == active_circle_old_y and circle.rect.width == 20*move.size:
+                circle_map[(nearest_centerx,nearest_centery)].append(circles[circle.num])
+                circle.rect.centerx = nearest_centerx
+                circle.rect.centery = nearest_centery
+    elif move.flag == 0:
+            active_circle_old_x = LEFT_MARGIN + (move.from_col * CELL_SIZE) + CELL_SIZE//2
+            active_circle_old_y = (move.from_row * CELL_SIZE) + CELL_SIZE//2
+            #Update Board
+            id = circle_map[(active_circle_old_x,active_circle_old_y)][-1].num
+            circle_map[(active_circle_old_x,active_circle_old_y)].pop()    
+            circle_map[(nearest_centerx,nearest_centery)].append(circles[id])
+            circles[id].rect.centerx = nearest_centerx
+            circles[id].rect.centery = nearest_centery
 
 def H_vs_H():
     screen.fill("black")
@@ -1444,9 +1520,8 @@ def AI_vs_AI():
                     active_player = 'black'
                 else:
                     active_player = 'white'                    
-                         
-                  
         pygame.display.flip()        
+        
 def options():
     global AI_DIFFICULTY
     global AI_DIFFICULTY_2
