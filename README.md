@@ -1,6 +1,10 @@
 # Gobblet
+
 * Gobblet is an abstract game played on a 4x4 grid with each of the two players starting with twelve pieces that can nest on top of one another.
 * The goal is to line up four gobblets of your color in a row. It's easy to play, but hard to master!
+
+![Alt text](Images/Gobblet_hCHjpetnfw.png)
+
 ## Game Rules
 * Each player has three stacks of pieces, all of the same color, and each stack consists of four pieces of different sizes.
 * At the beginning of the game, each stack is arranged outside the playing area in such a way that the smaller piece is covered by the larger one.
@@ -12,7 +16,6 @@
 * Moving a piece that is already on the board is allowed to any square where only smaller pieces are placed, allowing the moved piece to cover them.
     * It is allowed to cover one's own pieces or move a piece to an empty square.
     
-![Alt text](Images/Gobblet_hCHjpetnfw.png)
 
 ## Game Playing Algorithms
 
